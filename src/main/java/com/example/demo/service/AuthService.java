@@ -1,0 +1,98 @@
+package com.example.demo.service;
+
+import com.example.demo.constant.Role;
+import com.example.demo.dto.JwtDataDto;
+import com.example.demo.dto.LoginRequestDto;
+import com.example.demo.dto.RegisterRequestDto;
+import com.example.demo.entity.User;
+import com.example.demo.exception.BadRequestException;
+import com.example.demo.exception.ConflictException;
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.exception.ServiceUnavailableException;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.utils.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Service class responsible for authentication operations like login and registration.
+ */
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+  private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
+  private final JwtUtil jwtUtil;
+  private final AuthenticationManager authenticationManager;
+
+  /**
+   * Authenticates a user using the provided email and password.
+   *
+   * @param loginRequestDto DTO containing the user's login credentials.
+   * @return a JWT token if authentication is successful.
+   * @throws BadRequestException if the credentials are invalid.
+   * @throws ResourceNotFoundException if the user is not found.
+   */
+  public String login(LoginRequestDto loginRequestDto) {
+    try {
+      authenticationManager.authenticate(
+              new UsernamePasswordAuthenticationToken(
+                      loginRequestDto.getEmail(), loginRequestDto.getPassword())
+      );
+    } catch (BadCredentialsException ex) {
+      throw new BadRequestException("Usuario o contraseña inválidos");
+    }
+    User user = userRepository.findByEmail(loginRequestDto.getEmail())
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("No se encontró el usuario con email: "
+                            + loginRequestDto.getEmail()));
+    JwtDataDto jwtDataDto = new JwtDataDto();
+    jwtDataDto.setFullname(user.getFullname());
+    jwtDataDto.setEmail(user.getEmail());
+    jwtDataDto.setRole(user.getRole().name());
+    return jwtUtil.generateToken(jwtDataDto);
+  }
+
+  /**
+   * Registers a new user in the system with the default role of USER.
+   *
+   * @param request DTO containing the new user's registration data.
+   * @return a JWT token generated for the new user.
+   * @throws ConflictException if the email is already registered.
+   * @throws ServiceUnavailableException if an error occurs during registration.
+   */
+  @Transactional
+  public String register(RegisterRequestDto request) {
+    if (!request.getPassword().equals(request.getConfirmPassword())) {
+      throw new BadRequestException("La confirmación de contraseña no coincide");
+    }
+    try {
+      User u = new User();
+      u.setFullname(request.getFullname());
+      u.setEmail(request.getEmail());
+      u.setPassword(passwordEncoder.encode(request.getPassword()));
+      u.setRole(Role.USER);
+      userRepository.save(u);
+
+      JwtDataDto jwtDataDto = new JwtDataDto();
+      jwtDataDto.setFullname(u.getFullname());
+      jwtDataDto.setEmail(u.getEmail());
+      jwtDataDto.setRole(u.getRole().name());
+
+      return jwtUtil.generateToken(jwtDataDto);
+    } catch (DataIntegrityViolationException e) {
+      throw new ConflictException("El email ya está en uso");
+    } catch (Exception e) {
+      throw new ServiceUnavailableException("Error al registrar el usuario");
+    }
+  }
+
+
+}
