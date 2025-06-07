@@ -5,7 +5,7 @@
 # (Skip this stage if you prefer to build outside Docker
 #  and only copy the JAR in the next stage.)
 
-FROM maven:3.9.1-eclipse-temurin-21 AS builder
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /app
 
 # Copy only POM and sources, so that Docker caches dependencies:
