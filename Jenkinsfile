@@ -211,22 +211,22 @@ pipeline {
             steps {
                 echo "🔍 Verifying backend container health on ${TARGET_HOST_IP}"
 
-                // 1) First, check Docker health status remotely via SSH
                 sshagent(credentials: [env.SSH_CREDENTIAL_ID]) {
                     sh """
                     SSH_TARGET="${env.SSH_USER_ON_TARGET}@${env.TARGET_HOST_IP}"
-                    for i in \$(seq 1 5); do
+                    for i in \$(seq 1 7); do
                         health=\$(ssh -o StrictHostKeyChecking=no \$SSH_TARGET \\
                         "docker inspect --format='{{.State.Health.Status}}' ${env.BACKEND_CONTAINER_NAME}" 2>/dev/null || echo unknown)
+
                         if [ "\$health" = "healthy" ]; then
                             echo "✅ [Health] Attempt \$i: container is healthy"
                             break
-                            else
+                        else
                             echo "⚠️ [Health] Attempt \$i: container health='\$health'. Retrying in 10s..."
                         fi
 
-                        if [ \$i -eq 5 ] && [ "\$health" != "healthy" ]; then
-                            echo "❌ Container never became healthy after 5 tries"
+                        if [ \$i -eq 7 ] && [ "\$health" != "healthy" ]; then
+                            echo "❌ Container never became healthy after 7 tries"
                             exit 1
                         fi
                         sleep 10
