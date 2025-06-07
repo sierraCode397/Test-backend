@@ -37,8 +37,13 @@ COPY --from=builder /app/target/demo-0.0.1-SNAPSHOT.jar ./app.jar
 # (You set in .env “PORT=8080”, so that becomes server.port.)
 EXPOSE 8080
 
+# Add Docker-native healthcheck for Spring Boot actuator health endpoint:
+HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+
 # Switch to non-root user (optional):
 USER springuser
 
 # Entrypoint to run the JAR; the “-Dspring.profiles.active=…” can be added if needed.
 ENTRYPOINT ["java","-jar","/app/app.jar"]
+
