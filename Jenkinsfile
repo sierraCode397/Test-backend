@@ -162,19 +162,20 @@ pipeline {
                                 postgres:latest
                             
                             echo "Waiting for Postgres to become available..."
-                            ssh -o StrictHostKeyChecking=no \$SSH_TARGET \
-                            retries=0; \
-                            until docker exec my-postgres pg_isready -U "${DB_USERNAME}" >/dev/null 2>&1; do \
-                                if [ \$retries -ge 15 ]; then \
-                                    echo "❌ Postgres did not become ready in time."; \
-                                    exit 1; \
-                                fi; \
-                                elapsed=\$(( retries * 2 )); \
-                                echo "  - still waiting (\$((retries*2))s elapsed)..."; \
-                                retries=\$((retries+1)); \
-                                sleep 2; \
-                            done; \
+                            ssh -o StrictHostKeyChecking=no \$SSH_TARGET bash -lc '
+                            retries=0; 
+                            until docker exec my-postgres pg_isready -U "${DB_USERNAME}" >/dev/null 2>&1; do 
+                                if [ "$retries" -ge 15 ]; then 
+                                    echo "❌ Postgres did not become ready in time."; 
+                                    exit 1; 
+                                fi; 
+                                elapsed=\$(( retries * 2 ));
+                                echo "  - still waiting (\$((retries*2))s elapsed)...";
+                                retries=\$((retries+1));
+                                sleep 2;
+                            done;
                             echo "✅ Postgres is up (took \$((retries*2))s)."
+                            '
                         '''
                     }
                 }
