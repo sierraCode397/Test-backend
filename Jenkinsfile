@@ -129,7 +129,7 @@ pipeline {
                     }
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh """
+                        sh '''
                             SSH_TARGET="${env.SSH_USER_ON_TARGET}@${env.TARGET_HOST_IP}"
 
                             ssh -o StrictHostKeyChecking=no $SSH_TARGET \
@@ -157,7 +157,7 @@ pipeline {
                                  sleep 2; \
                                done; \
                                echo "✅ Postgres is up (took \$((retries*2))s)."'
-                        """
+                        '''
                     }
                 }
             }
