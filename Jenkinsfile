@@ -34,6 +34,26 @@ pipeline {
     }
 
     stages {
+
+        stage('Lint') {
+            steps {
+                sh "mvn checkstyle:checkstyle"
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'target/site/checkstyle.html', fingerprint: true 
+
+                    publishHTML(target: [
+                        reportName: 'Checkstyle Report',
+                        reportDir: 'target/site',
+                        reportFiles: 'checkstyle.html',
+                        keepAll: true,
+                        alwaysLinkToLastBuild: true,
+                        allowMissing: true
+                    ])
+                }
+            }
+        }
         stage('Checkout Backend Code') {
             agent { label 'worker-agents-02' }
             steps {
