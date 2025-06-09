@@ -156,7 +156,7 @@ pipeline {
                                 -p 5432:5432 \
                                 -e POSTGRES_DB=${DB_NAME} \
                                 -e POSTGRES_USER=${DB_USERNAME} \
-                                -e POSTGRES_PASSWORD='${DB_PASSWORD}' \
+                                -e POSTGRES_PASSWORD=${DB_PASSWORD} \
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
                                 postgres:latest'
