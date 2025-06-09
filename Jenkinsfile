@@ -152,7 +152,7 @@ pipeline {
                                      echo "❌ Postgres did not become ready in time."; \
                                      exit 1; \
                                  fi; \
-                                 echo "  - still waiting (\\$((retries*2))s elapsed)..."; \
+                                 echo "  - still waiting (\$((retries*2))s elapsed)..."; \
                                  retries=$((retries+1)); \
                                  sleep 2; \
                                done; \
