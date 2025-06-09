@@ -149,20 +149,20 @@ pipeline {
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
-                            ssh -o StrictHostKeyChecking=no \$SSH_TARGET \
+                            ssh -o StrictHostKeyChecking=no $SSH_TARGET \
                             docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
                                 -p 5432:5432 \
-                                -e POSTGRES_DB="${DB_NAME}" \
-                                -e POSTGRES_USER="${DB_USERNAME}" \
-                                -e POSTGRES_PASSWORD="${DB_PASSWORD}" \
+                                -e POSTGRES_DB=$DB_NAME \
+                                -e POSTGRES_USER=$DB_USERNAME} \
+                                -e POSTGRES_PASSWORD=$DB_PASSWORD \
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
                                 postgres:latest
                             
                             echo "Waiting for Postgres to become available..."
-                            ssh -o StrictHostKeyChecking=no \$SSH_TARGET bash -lc '
+                            ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc '
                             retries=0; 
                             until docker exec my-postgres pg_isready -U "${DB_USERNAME}" >/dev/null 2>&1; do 
                                 if [ "$retries" -ge 15 ]; then 
@@ -200,47 +200,47 @@ pipeline {
                     echo "Deploying backend container (${env.BACKEND_CONTAINER_NAME}) to ${env.TARGET_HOST_IP} on port ${env.BACKEND_HOST_PORT}"
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh """
+                        sh '''#!/usr/bin/env bash
                             set -e
                             echo "Waiting a few seconds for the DB to fully start..."
                             sleep 15
 
                             SSH_TARGET="${env.SSH_USER_ON_TARGET}@${env.TARGET_HOST_IP}"
 
-                            echo "Pulling new backend image ${env.BACKEND_IMAGE_NAME}:latest on \$SSH_TARGET..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
+                            echo "Pulling new backend image ${env.BACKEND_IMAGE_NAME}:latest on $SSH_TARGET..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_TARGET \
                                 "docker pull ${env.BACKEND_IMAGE_NAME}:latest"
 
-                            echo "Stopping & removing old container ${env.BACKEND_CONTAINER_NAME} on \$SSH_TARGET if it exists..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
+                            echo "Stopping & removing old container ${env.BACKEND_CONTAINER_NAME} on $SSH_TARGET if it exists..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_TARGET \
                                 "docker stop ${env.BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true; docker rm ${env.BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true"
 
-                            echo "Running new backend container ${env.BACKEND_CONTAINER_NAME} on \$SSH_TARGET..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
+                            echo "Running new backend container ${env.BACKEND_CONTAINER_NAME} on $SSH_TARGET..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_TARGET \
                                 "docker run -d --name ${env.BACKEND_CONTAINER_NAME} \
                                     --network primarket \
-                                    -p ${env.BACKEND_HOST_PORT}:${env.PORT} \
-                                    -e DB_HOST=${env.DB_HOST} \
-                                    -e DB_PORT=${env.DB_PORT} \
-                                    -e DB_NAME=${env.DB_NAME} \
-                                    -e DB_USERNAME=${env.DB_USERNAME} \
-                                    -e DB_PASSWORD=\"${env.DB_PASSWORD}\" \
-                                    -e DB_URL='${env.DB_URL}' \
-                                    -e JWT_SECRET='${env.JWT_SECRET}' \
-                                    -e JWT_EXPIRATION='${env.JWT_EXPIRATION}' \
-                                    -e RECAPTCHA_SECRET_KEY='${env.RECAPTCHA_SECRET_KEY}' \
-                                    -e RECAPTCHA_SITE_KEY='${env.RECAPTCHA_SITE_KEY}' \
-                                    -e CLOUD_NAME='${env.CLOUD_NAME}' \
-                                    -e API_KEY='${env.API_KEY}' \
-                                    -e API_SECRET='${env.API_SECRET}' \
-                                    -e GOOGLE_CLIENT_ID='${env.GOOGLE_CLIENT_ID}' \
-                                    -e GOOGLE_CLIENT_SECRET='${env.GOOGLE_CLIENT_SECRET}' \
-                                    -e SERVER_PORT=${env.PORT} \
+                                    -p ${env.BACKEND_HOST_PORT}:"${env.PORT}" \
+                                    -e DB_HOST="${env.DB_HOST}" \
+                                    -e DB_PORT="${env.DB_PORT}" \
+                                    -e DB_NAME="${env.DB_NAME}" \
+                                    -e DB_USERNAME="${env.DB_USERNAME}" \
+                                    -e DB_PASSWORD="${env.DB_PASSWORD}" \
+                                    -e DB_URL="${env.DB_URL}" \
+                                    -e JWT_SECRET="${env.JWT_SECRET}" \
+                                    -e JWT_EXPIRATION="${env.JWT_EXPIRATION}" \
+                                    -e RECAPTCHA_SECRET_KEY="${env.RECAPTCHA_SECRET_KEY}" \
+                                    -e RECAPTCHA_SITE_KEY="${env.RECAPTCHA_SITE_KEY}" \
+                                    -e CLOUD_NAME="${env.CLOUD_NAME}" \
+                                    -e API_KEY="${env.API_KEY}" \
+                                    -e API_SECRET="${env.API_SECRET}" \
+                                    -e GOOGLE_CLIENT_ID="${env.GOOGLE_CLIENT_ID}" \
+                                    -e GOOGLE_CLIENT_SECRET="${env.GOOGLE_CLIENT_SECRET}" \
+                                    -e SERVER_PORT="${env.PORT}" \
                                     --restart unless-stopped \
                                     ${env.BACKEND_IMAGE_NAME}:latest"
 
-                            echo "Backend deployment commands sent to \$SSH_TARGET."
-                        """
+                            echo "Backend deployment commands sent to $SSH_TARGET."
+                        '''
                     }
                 }
             }
