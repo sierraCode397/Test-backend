@@ -24,8 +24,6 @@ pipeline {
 
         SSH_CREDENTIAL_ID        = 'primarket-ssh'
 
-        DB_URL                     = "jdbc:postgresql://\${DB_HOST}:\${DB_PORT}/\${DB_NAME}"
-
         // Application URLs
         VERIFICATION_URL         = "http://${TARGET_HOST_IP}:${BACKEND_HOST_PORT}"
         SPRINT_BOOT_PUBLIC_API_BASE_URL_FOR_BUILD = "https://primarket-dev.codershub.top"
@@ -126,6 +124,11 @@ pipeline {
                     string(credentialsId: 'db-name',     variable: 'DB_NAME'),
                     usernamePassword(credentialsId: 'db-postgres', usernameVariable: 'DB_USERNAME', passwordVariable: 'DB_PASSWORD')
                 ]) {
+
+                    script {
+                        env.DB_URL = "jdbc:postgresql://${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}"
+                    }
+
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
                         sh """
                             set -e
