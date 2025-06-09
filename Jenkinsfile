@@ -149,6 +149,8 @@ pipeline {
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
+                            echo "Name: $DB_NAME User:  $DB_USERNAME PassWord: $DB_PASSWORD Host: $DB_HOST Port: $DB_PORT"
+                            echo "DB $DB_URL"
                             ssh -o StrictHostKeyChecking=no "$SSH_TARGET" \
                             docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
@@ -164,7 +166,7 @@ pipeline {
                             echo "Waiting for Postgres to become available..."
                             ssh -o StrictHostKeyChecking=no "$SSH_TARGET" bash -lc '
                             retries=0; 
-                            until docker exec my-postgres pg_isready -U "${DB_USERNAME}" >/dev/null 2>&1; do 
+                            until docker exec my-postgres pg_isready -U $DB_USERNAME >/dev/null 2>&1; do 
                                 if [ "$retries" -ge 15 ]; then 
                                     echo "❌ Postgres did not become ready in time."; 
                                     exit 1; 
