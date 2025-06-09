@@ -129,39 +129,46 @@ pipeline {
                     }
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh '''
-                            SSH_TARGET="${env.SSH_USER_ON_TARGET}@${env.TARGET_HOST_IP}"
+                        sh '''#!/usr/bin/env bash
+                            set -euo pipefail
 
-                            ssh -o StrictHostKeyChecking=no $SSH_TARGET \
-                              'docker inspect my-postgres >/dev/null 2>&1 || \
-                               docker run -d --name my-postgres \
-                                 --network primarket \
-                                 -p 5432:5432 \
-                                 -e POSTGRES_DB=${env.DB_NAME} \
-                                 -e POSTGRES_USER=${env.DB_USERNAME} \
-                                 -e POSTGRES_PASSWORD="${env.DB_PASSWORD}" \
-                                 -v pgdata:/var/lib/postgresql/data \
-                                 --restart unless-stopped \
-                                 postgres:latest'
+                            SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
+
+                            # Ensure the Postgres container exists and is running
+                            ssh -o StrictHostKeyChecking=no "$SSH_TARGET" "\
+                            docker inspect my-postgres >/dev/null 2>&1 || \
+                            docker run -d --name my-postgres \
+                                --network primarket \
+                                -p 5432:5432 \
+                                -e POSTGRES_DB=${DB_NAME} \
+                                -e POSTGRES_USER=${DB_USERNAME} \
+                                -e POSTGRES_PASSWORD='${DB_PASSWORD}' \
+                                -v pgdata:/var/lib/postgresql/data \
+                                --restart unless-stopped \
+                                postgres:latest
+                            "
 
                             echo "Waiting for Postgres to become available..."
-                            ssh -o StrictHostKeyChecking=no $SSH_TARGET \
-                              'retries=0; \
-                               until docker exec my-postgres pg_isready -U ${env.DB_USERNAME} >/dev/null 2>&1; do \
-                                 if [ $retries -ge 15 ]; then \
-                                     echo "❌ Postgres did not become ready in time."; \
-                                     exit 1; \
-                                 fi; \
-                                 echo "  - still waiting (\$((retries*2))s elapsed)..."; \
-                                 retries=\$((retries+1)); \
-                                 sleep 2; \
-                               done; \
-                               echo "✅ Postgres is up (took \$((retries*2))s)."'
-                        '''
+                            ssh -o StrictHostKeyChecking=no "$SSH_TARGET" "\
+                            retries=0; \
+                            until docker exec my-postgres pg_isready -U '${DB_USERNAME}' >/dev/null 2>&1; do \
+                                if (( retries >= 15 )); then \
+                                echo '❌ Postgres did not become ready in time.'; \
+                                exit 1; \
+                                fi; \
+                                elapsed=\$(( retries * 2 )); \
+                                echo \"  - still waiting (\${elapsed}s elapsed)...\"; \
+                                (( retries++ )); \
+                                sleep 2; \
+                            done; \
+                            echo \"✅ Postgres is up (took \$((retries*2))s).\"\
+                            "
+                            '''
                     }
                 }
             }
         }
+
 
         stage('Deploy Backend to VM') {
             agent { label 'worker-agents-02' }
