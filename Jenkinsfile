@@ -129,7 +129,7 @@ pipeline {
                     }
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh '''#!/usr/bin/env bash
+                        sh """#!/usr/bin/env bash
                             set -euo pipefail
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
@@ -163,7 +163,7 @@ pipeline {
                             done; \
                             echo "✅ Postgres is up (took \$((retries*2))s)."\
                             "
-                            '''
+                            """
                     }
                 }
             }
