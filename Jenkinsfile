@@ -153,10 +153,10 @@ pipeline {
                                      exit 1; \
                                  fi; \
                                  echo "  - still waiting (\$((retries*2))s elapsed)..."; \
-                                 retries=$((retries+1)); \
+                                 retries=\$((retries+1)); \
                                  sleep 2; \
                                done; \
-                               echo "✅ Postgres is up (took $((retries*2))s)."'
+                               echo "✅ Postgres is up (took \$((retries*2))s)."'
                         """
                     }
                 }
