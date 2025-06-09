@@ -161,7 +161,7 @@ pipeline {
                                 retries=\$(( retries + 1 )); \
                                 sleep 2; \
                             done; \
-                            echo \"✅ Postgres is up (took \$((retries*2))s).\"\
+                            echo "✅ Postgres is up (took \$((retries*2))s)."\
                             "
                             '''
                     }
