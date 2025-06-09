@@ -34,7 +34,6 @@ pipeline {
     }
 
     stages {
-
         stage('Lint') {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
@@ -48,6 +47,7 @@ pipeline {
                 }
             }
         }
+
         stage('Checkout Backend Code') {
             agent { label 'worker-agents-02' }
             steps {
@@ -144,7 +144,7 @@ pipeline {
                     }
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh """
+                        sh ('
                             set -e
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
@@ -175,7 +175,7 @@ pipeline {
                                 sleep 2; \
                             done; \
                             echo "✅ Postgres is up (took \$((retries*2))s)."'
-                        """
+                        ')
                     }
                 }
             }
