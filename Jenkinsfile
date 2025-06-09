@@ -37,20 +37,14 @@ pipeline {
 
         stage('Lint') {
             steps {
-                sh "mvn checkstyle:checkstyle"
+                catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                    sh "mvn checkstyle:checkstyle"
+                }
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'target/site/checkstyle.html', fingerprint: true 
-
-                    publishHTML(target: [
-                        reportName: 'Checkstyle Report',
-                        reportDir: 'target/site',
-                        reportFiles: 'checkstyle.html',
-                        keepAll: true,
-                        alwaysLinkToLastBuild: true,
-                        allowMissing: true
-                    ])
+                    archiveArtifacts artifacts: 'target/checkstyle-result.xml', fingerprint: true
+                    recordIssues tools: [checkStyle(pattern: 'target/checkstyle-result.xml')]
                 }
             }
         }
