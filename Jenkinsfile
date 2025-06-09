@@ -149,9 +149,7 @@ pipeline {
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
-                            echo "Name: $DB_NAME User:  $DB_USERNAME PassWord: $DB_PASSWORD Host: $DB_HOST Port: $DB_PORT"
-                            echo "DB $DB_URL"
-                            ssh -o StrictHostKeyChecking=no "$SSH_TARGET" \
+                            ssh -o StrictHostKeyChecking=no "$SSH_TARGET" bash -lc '
                             docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
@@ -162,7 +160,8 @@ pipeline {
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
                                 postgres:latest
-                            
+                            '
+
                             echo "Waiting for Postgres to become available..."
                             ssh -o StrictHostKeyChecking=no "$SSH_TARGET" bash -lc '
                             retries=0; 
