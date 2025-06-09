@@ -149,7 +149,9 @@ pipeline {
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
-                            ssh -o StrictHostKeyChecking=no "$SSH_TARGET" bash -lc '
+                            echo "$SSH_TARGET Isaaac look at this"
+
+                            ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc '
                             docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
@@ -163,7 +165,7 @@ pipeline {
                             '
 
                             echo "Waiting for Postgres to become available..."
-                            ssh -o StrictHostKeyChecking=no "$SSH_TARGET" bash -lc '
+                            ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc '
                             retries=0; 
                             until docker exec my-postgres pg_isready -U $DB_USERNAME >/dev/null 2>&1; do 
                                 if [ "$retries" -ge 15 ]; then 
