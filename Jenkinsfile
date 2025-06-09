@@ -144,13 +144,13 @@ pipeline {
                     }
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh ('
+                        sh '''#!/usr/bin/env bash
                             set -e
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
                             ssh -o StrictHostKeyChecking=no \$SSH_TARGET \
-                            'docker inspect my-postgres >/dev/null 2>&1 || \
+                            docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
                                 -p 5432:5432 \
@@ -174,8 +174,8 @@ pipeline {
                                 retries=\$((retries+1)); \
                                 sleep 2; \
                             done; \
-                            echo "✅ Postgres is up (took \$((retries*2))s)."'
-                        ')
+                            echo "✅ Postgres is up (took \$((retries*2))s)."
+                        '''
                     }
                 }
             }
