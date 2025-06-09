@@ -24,6 +24,8 @@ pipeline {
 
         SSH_CREDENTIAL_ID        = 'primarket-ssh'
 
+        DB_URL                     = "jdbc:postgresql://\${DB_HOST}:\${DB_PORT}/\${DB_NAME}"
+
         // Application URLs
         VERIFICATION_URL         = "http://${TARGET_HOST_IP}:${BACKEND_HOST_PORT}"
         SPRINT_BOOT_PUBLIC_API_BASE_URL_FOR_BUILD = "https://primarket-dev.codershub.top"
@@ -124,19 +126,14 @@ pipeline {
                     string(credentialsId: 'db-name',     variable: 'DB_NAME'),
                     usernamePassword(credentialsId: 'db-postgres', usernameVariable: 'DB_USERNAME', passwordVariable: 'DB_PASSWORD')
                 ]) {
-                    script {
-                        env.DB_URL = "jdbc:postgresql://${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}"
-                    }
-
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh """#!/usr/bin/env bash
-                            set -euo pipefail
+                        sh """
+                            set -e
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
-                            # Ensure the Postgres container exists and is running
-                            ssh -o StrictHostKeyChecking=no "${SSH_TARGET}" "\
-                            docker inspect my-postgres >/dev/null 2>&1 || \
+                            ssh -o StrictHostKeyChecking=no \$SSH_TARGET \
+                            'docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
                                 -p 5432:5432 \
@@ -145,30 +142,27 @@ pipeline {
                                 -e POSTGRES_PASSWORD='${DB_PASSWORD}' \
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
-                                postgres:latest
-                            "
-
+                                postgres:latest'
+                            
                             echo "Waiting for Postgres to become available..."
-                            ssh -o StrictHostKeyChecking=no "${SSH_TARGET}" "\
-                            retries=0; \
+                            ssh -o StrictHostKeyChecking=no \$SSH_TARGET \
+                            'retries=0; \
                             until docker exec my-postgres pg_isready -U '${DB_USERNAME}' >/dev/null 2>&1; do \
-                                if [ "$retries" -ge 15 ]; then \
-                                echo '❌ Postgres did not become ready in time.'; \
-                                exit 1; \
+                                if [ \$retries -ge 15 ]; then \
+                                    echo "❌ Postgres did not become ready in time."; \
+                                    exit 1; \
                                 fi; \
                                 elapsed=\$(( retries * 2 )); \
-                                echo \"  - still waiting (\${elapsed}s elapsed)...\"; \
-                                retries=\$(( retries + 1 )); \
+                                echo "  - still waiting (\$((retries*2))s elapsed)..."; \
+                                retries=\$((retries+1)); \
                                 sleep 2; \
                             done; \
-                            echo "✅ Postgres is up (took \$((retries*2))s)."\
-                            "
-                            """
+                            echo "✅ Postgres is up (took \$((retries*2))s)."'
+                        """
                     }
                 }
             }
         }
-
 
         stage('Deploy Backend to VM') {
             agent { label 'worker-agents-02' }
@@ -181,7 +175,7 @@ pipeline {
                     string(credentialsId: 'recaptcha-site-key',  variable: 'RECAPTCHA_SITE_KEY'),
                     string(credentialsId: 'cloud-name',          variable: 'CLOUD_NAME'),
                     string(credentialsId: 'api-key',             variable: 'API_KEY'),
-                    string(credentialsId: 'api-secret',             variable: 'API_SECRET'),
+                    string(credentialsId: 'api-secret',          variable: 'API_SECRET'),
                     string(credentialsId: 'google-client-id',    variable: 'GOOGLE_CLIENT_ID'),
                     string(credentialsId: 'google-client-secret',variable: 'GOOGLE_CLIENT_SECRET')
                 ]) {
@@ -195,16 +189,16 @@ pipeline {
 
                             SSH_TARGET="${env.SSH_USER_ON_TARGET}@${env.TARGET_HOST_IP}"
 
-                            echo "Pulling new backend image ${env.BACKEND_IMAGE_NAME}:latest on $SSH_TARGET..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_TARGET \
+                            echo "Pulling new backend image ${env.BACKEND_IMAGE_NAME}:latest on \$SSH_TARGET..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
                                 "docker pull ${env.BACKEND_IMAGE_NAME}:latest"
 
-                            echo "Stopping & removing old container ${env.BACKEND_CONTAINER_NAME} on $SSH_TARGET if it exists..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_TARGET \
+                            echo "Stopping & removing old container ${env.BACKEND_CONTAINER_NAME} on \$SSH_TARGET if it exists..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
                                 "docker stop ${env.BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true; docker rm ${env.BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true"
 
-                            echo "Running new backend container ${env.BACKEND_CONTAINER_NAME} on $SSH_TARGET..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_TARGET \
+                            echo "Running new backend container ${env.BACKEND_CONTAINER_NAME} on \$SSH_TARGET..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
                                 "docker run -d --name ${env.BACKEND_CONTAINER_NAME} \
                                     --network primarket \
                                     -p ${env.BACKEND_HOST_PORT}:${env.PORT} \
@@ -227,7 +221,7 @@ pipeline {
                                     --restart unless-stopped \
                                     ${env.BACKEND_IMAGE_NAME}:latest"
 
-                            echo "Backend deployment commands sent to $SSH_TARGET."
+                            echo "Backend deployment commands sent to \$SSH_TARGET."
                         """
                     }
                 }
