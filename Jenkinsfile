@@ -159,7 +159,7 @@ pipeline {
                                 -e POSTGRES_PASSWORD="${DB_PASSWORD}" \
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
-                                postgres:latest'
+                                postgres:latest
                             
                             echo "Waiting for Postgres to become available..."
                             ssh -o StrictHostKeyChecking=no \$SSH_TARGET \
