@@ -135,7 +135,7 @@ pipeline {
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
                             # Ensure the Postgres container exists and is running
-                            ssh -o StrictHostKeyChecking=no "$SSH_TARGET" "\
+                            ssh -o StrictHostKeyChecking=no "\$SSH_TARGET" "\
                             docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
