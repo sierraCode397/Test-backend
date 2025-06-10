@@ -144,21 +144,21 @@ pipeline {
                     }
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh '''#!/usr/bin/env bash
+                        sh """
                             set -e
 
                             SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
-                            echo "$SSH_TARGET Isaaac look at this"
+                            echo "\$SSH_TARGET Isaaac look at this"
 
-                            ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc '
-                            docker inspect my-postgres >/dev/null 2>&1 || \
+                            ssh -o StrictHostKeyChecking=no \$SSH_TARGET \
+                            'docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
                                 -p 5432:5432 \
-                                -e POSTGRES_DB=$DB_NAME \
-                                -e POSTGRES_USER=$DB_USERNAME \
-                                -e POSTGRES_PASSWORD=$DB_PASSWORD \
+                                -e POSTGRES_DB=${DB_NAME} \
+                                -e POSTGRES_USER=${DB_USERNAME} \
+                                -e POSTGRES_PASSWORD='${DB_PASSWORD}' \
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
                                 postgres:latest
@@ -168,7 +168,7 @@ pipeline {
                                 sleep 15
                             echo "✅ Postgres is up (took \$((retries*2))s)."
                             
-                        '''
+                        """
                     }
                 }
             }
@@ -192,53 +192,47 @@ pipeline {
                     echo "Deploying backend container (${env.BACKEND_CONTAINER_NAME}) to ${env.TARGET_HOST_IP} on port ${env.BACKEND_HOST_PORT}"
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh '''#!/usr/bin/env bash
+                        sh """
                             set -e
                             echo "Waiting a few seconds for the DB to fully start..."
                             sleep 15
 
-                            SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
+                            SSH_TARGET="${env.SSH_USER_ON_TARGET}@${env.TARGET_HOST_IP}"
 
-                            # Construct the docker pull command string on the Jenkins agent
-                            # All variables like BACKEND_IMAGE_NAME are available as shell environment variables here.
-                            REMOTE_PULL_COMMAND="docker pull ${BACKEND_IMAGE_NAME}:latest"
-                            echo "Pulling new backend image ${BACKEND_IMAGE_NAME}:latest on $SSH_TARGET..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$SSH_TARGET" "$REMOTE_PULL_COMMAND"
+                            echo "Pulling new backend image ${env.BACKEND_IMAGE_NAME}:latest on \$SSH_TARGET..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
+                                "docker pull ${env.BACKEND_IMAGE_NAME}:latest"
 
-                            # Construct the docker stop/rm command string on the Jenkins agent
-                            REMOTE_STOP_RM_COMMAND="docker stop ${BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true; docker rm ${BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true"
-                            echo "Stopping & removing old container ${BACKEND_CONTAINER_NAME} on $SSH_TARGET if it exists..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$SSH_TARGET" "$REMOTE_STOP_RM_COMMAND"
+                            echo "Stopping & removing old container ${env.BACKEND_CONTAINER_NAME} on \$SSH_TARGET if it exists..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
+                                "docker stop ${env.BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true; docker rm ${env.BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true"
 
-                            # Construct the docker run command string on the Jenkins agent
-                            # Ensure all environment variables are correctly interpolated here before sending to remote.
-                            REMOTE_RUN_COMMAND="docker run -d --name ${BACKEND_CONTAINER_NAME} \\
-                                --network primarket \\
-                                -p ${BACKEND_HOST_PORT}:${PORT} \\
-                                -e DB_HOST=${DB_HOST} \\
-                                -e DB_PORT=${DB_PORT} \\
-                                -e DB_NAME=${DB_NAME} \\
-                                -e DB_USERNAME=${DB_USERNAME} \\
-                                -e DB_PASSWORD=${DB_PASSWORD} \\
-                                -e DB_URL=${DB_URL} \\
-                                -e JWT_SECRET=${JWT_SECRET} \\
-                                -e JWT_EXPIRATION=${JWT_EXPIRATION} \\
-                                -e RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY} \\
-                                -e RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY} \\
-                                -e CLOUD_NAME=${CLOUD_NAME} \\
-                                -e API_KEY=${API_KEY} \\
-                                -e API_SECRET=${API_SECRET} \\
-                                -e GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} \\
-                                -e GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET} \\
-                                -e SERVER_PORT=${PORT} \\
-                                --restart unless-stopped \\
-                                ${BACKEND_IMAGE_NAME}:latest"
+                            echo "Running new backend container ${env.BACKEND_CONTAINER_NAME} on \$SSH_TARGET..."
+                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \$SSH_TARGET \
+                                "docker run -d --name ${env.BACKEND_CONTAINER_NAME} \
+                                    --network primarket \
+                                    -p ${env.BACKEND_HOST_PORT}:${env.PORT} \
+                                    -e DB_HOST=${env.DB_HOST} \
+                                    -e DB_PORT=${env.DB_PORT} \
+                                    -e DB_NAME=${env.DB_NAME} \
+                                    -e DB_USERNAME=${env.DB_USERNAME} \
+                                    -e DB_PASSWORD=\"${env.DB_PASSWORD}\" \
+                                    -e DB_URL='${env.DB_URL}' \
+                                    -e JWT_SECRET='${env.JWT_SECRET}' \
+                                    -e JWT_EXPIRATION='${env.JWT_EXPIRATION}' \
+                                    -e RECAPTCHA_SECRET_KEY='${env.RECAPTCHA_SECRET_KEY}' \
+                                    -e RECAPTCHA_SITE_KEY='${env.RECAPTCHA_SITE_KEY}' \
+                                    -e CLOUD_NAME='${env.CLOUD_NAME}' \
+                                    -e API_KEY='${env.API_KEY}' \
+                                    -e API_SECRET='${env.API_SECRET}' \
+                                    -e GOOGLE_CLIENT_ID='${env.GOOGLE_CLIENT_ID}' \
+                                    -e GOOGLE_CLIENT_SECRET='${env.GOOGLE_CLIENT_SECRET}' \
+                                    -e SERVER_PORT=${env.PORT} \
+                                    --restart unless-stopped \
+                                    ${env.BACKEND_IMAGE_NAME}:latest"
 
-                            echo "Running new backend container ${BACKEND_CONTAINER_NAME} on $SSH_TARGET..."
-                            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$SSH_TARGET" "$REMOTE_RUN_COMMAND"
-
-                            echo "Backend deployment commands sent to $SSH_TARGET."
-                        '''
+                            echo "Backend deployment commands sent to \$SSH_TARGET."
+                        """
                     }
                 }
             }
