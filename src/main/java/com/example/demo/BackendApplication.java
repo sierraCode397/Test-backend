@@ -30,7 +30,6 @@ public class BackendApplication {
   public static void main(String[] args) {
     SpringApplication.run(BackendApplication.class, args);
   }
-
   /**
    * Prints the loaded environment variables to the console, useful for verifying the configuration.
    */
@@ -38,6 +37,4 @@ public class BackendApplication {
   public void logDatabaseUrl() {
     System.out.println("Conectando a la DB en: " + System.getProperty("spring.datasource.url"));
   }
-
 }
-

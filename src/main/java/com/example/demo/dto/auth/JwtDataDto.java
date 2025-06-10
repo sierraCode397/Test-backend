@@ -3,7 +3,6 @@ package com.example.demo.dto.auth;
 import java.util.UUID;
 import lombok.Data;
 
-
 /**
  * DTO that represents the data of the JWT token.
  */
@@ -14,5 +13,6 @@ public class JwtDataDto {
   private String fullname;
   private String email;
   private String role;
+  private boolean twoFactorEnabled;
 
 }

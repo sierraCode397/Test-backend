@@ -4,16 +4,17 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
+
+/**
+ * Configuration for Google reCAPTCHA keys.
+ * This class holds the site key and secret key for reCAPTCHA.
+ */
 @Setter
 @Getter
 @Configuration
 @ConfigurationProperties(prefix = "google.recaptcha.key")
 public class CaptchaConfig {
-
-    private String site;
-    private String secret;
-
-
+  private String site;
+  private String secret;
 }

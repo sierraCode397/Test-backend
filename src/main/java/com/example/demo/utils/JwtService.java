@@ -10,13 +10,10 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import static io.jsonwebtoken.Jwts.*;
-
-
 
 /**
  * Utility class for generating and validating JSON Web Tokens (JWT).
@@ -57,20 +54,21 @@ public class JwtService {
     claims.put("fullname", d.getFullname());
     claims.put("email", d.getEmail());
     claims.put("role", "ROLE_" + d.getRole());
+    claims.put("twoFaEnabled", d.isTwoFactorEnabled());
     return buildToken(claims, d.getEmail(), jwtExpiration);
   }
 
   /**
    * Builds a JWT token with custom claims and expiration.
    *
-   * @param claims map of claims
-   * @param subject subject (usually username/email)
+   * @param claims     map of claims
+   * @param subject    subject (usually username/email)
    * @param expiration expiration time in ms
    * @return JWT token string
    */
   private String buildToken(Map<String, Object> claims, String subject, long expiration) {
     long now = System.currentTimeMillis();
-    return builder()
+    return Jwts.builder()
             .setClaims(claims)
             .setSubject(subject)
             .setIssuedAt(new Date(now))
@@ -92,20 +90,19 @@ public class JwtService {
   /**
    * Extracts specific claim using a resolver.
    *
-   * @param <T> return type
-   *
-   * @param token JWT token string
+   * @param <T>            return type
+   * @param token          JWT token string
    * @param claimsResolver function to extract claim
    * @return extracted claim
    */
-  public <T> T extractClaim(String token, java.util.function.Function<Claims, T> claimsResolver) {
+  public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
     return claimsResolver.apply(extractAllClaims(token));
   }
 
   /**
    * Validates if token is not expired and belongs to the user.
    *
-   * @param token JWT token string
+   * @param token       JWT token string
    * @param userDetails user details object
    * @return true if valid
    */
@@ -148,4 +145,15 @@ public class JwtService {
             .getBody();
   }
 
+  /**
+   * Extracts the "twoFaPending" claim from the token.
+   *
+   * @param token JWT token string
+   * @return value of twoFaPending
+   */
+  public Boolean extractTwoFaPending(String token) {
+    Claims claims = extractAllClaims(token);
+    return claims.get("twoFaPending", Boolean.class);
+  }
 }
+

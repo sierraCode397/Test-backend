@@ -46,7 +46,12 @@ public class UserService implements UserDetailsService {
     newUser.setFullname(fullname);
     newUser.setEmail(email);
     newUser.setRole(Role.USER);
+    newUser.setTwoFactorEnabled(false);
     newUser.setPassword(passwordEncoder.encode(""));
     return Optional.of(this.userRepository.save(newUser));
+  }
+
+  public Optional<User> findByEmail(String email) {
+    return userRepository.findByEmail(email);
   }
 }

@@ -19,6 +19,6 @@ public class ApiResult<T> {
   private String message;
   private T data;
 
-  public ApiResult(boolean b, String captchaInválido) {
+  public ApiResult(boolean b, String captchaInvalid) {
   }
 }

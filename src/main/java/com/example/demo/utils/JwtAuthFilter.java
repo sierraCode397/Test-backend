@@ -1,6 +1,7 @@
 package com.example.demo.utils;
 
 import com.example.demo.exception.InvalidTokenException;
+import com.example.demo.exception.UnauthorizedException;
 import com.example.demo.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -57,6 +58,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
           System.out.println("TOKEN MALO >;C");
           throw new InvalidTokenException("Token inválido");
         }
+        Boolean twoFaPending = jwtService.extractTwoFaPending(token);
+        String path = request.getRequestURI();
+        boolean is2FaVerificationEndpoint = path.equals("/api/auth/2fa/validate");
+        if (Boolean.TRUE.equals(twoFaPending) && !is2FaVerificationEndpoint) {
+          throw new UnauthorizedException("2FA verification required");
+        }
+
 
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(

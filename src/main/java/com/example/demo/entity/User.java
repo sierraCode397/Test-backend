@@ -1,8 +1,18 @@
 package com.example.demo.entity;
 
 import com.example.demo.constant.Role;
-import jakarta.persistence.*;
-
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -51,6 +61,9 @@ public class User implements UserDetails {
   @Column(nullable = false)
   private String fullname;
 
+  @Column(nullable = false, name = "two_factor_enabled")
+  private Boolean twoFactorEnabled;
+
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
@@ -87,6 +100,10 @@ public class User implements UserDetails {
   @Override
   public boolean isEnabled() {
     return true;
+  }
+
+  public boolean isTwoFactorEnabled() {
+    return twoFactorEnabled;
   }
 
 }

@@ -52,6 +52,8 @@ public class CustomOidcUserService extends OidcUserService {
     existingUser.ifPresent(user -> {
       attributes.put("userId", user.getId());
       attributes.put("role", user.getRole().name());
+      attributes.put("twoFactorEnabled", user.isTwoFactorEnabled());
+      System.out.println(user.isTwoFactorEnabled());
     });
 
     return new DefaultOidcUser(

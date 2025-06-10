@@ -40,14 +40,15 @@ public class CompanyProfileService {
    * @throws ConflictException         if profile already exists for the user
    * @throws FileUploadException       if file upload fails
    */
-  public CompanyProfileResponseDto create(MultipartFile file, CompanyProfileRequestDto companyProfileRequestDto) {
+  public CompanyProfileResponseDto create(
+          MultipartFile file,
+          CompanyProfileRequestDto companyProfileRequestDto) {
     User user = userRepository.findById(companyProfileRequestDto.getUserId())
             .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
     if (companyProfileRepository.existsByUser(user)) {
       throw new ConflictException("Ya existe un perfil para este usuario");
     }
-
     CompanyProfile profile = new CompanyProfile();
     saveProfile(profile, user, companyProfileRequestDto, file);
     return new CompanyProfileResponseDto(

@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -54,10 +55,11 @@ public class CompanyProfileController {
 
     validateFile(file);
     CompanyProfileRequestDto companyProfileRequestDto = valid(companyProfileRequestDtoJson);
-    CompanyProfileResponseDto createdProfile = companyProfileService.create(file, companyProfileRequestDto);
+    CompanyProfileResponseDto createdProfile = companyProfileService.create(
+            file, companyProfileRequestDto);
     ApiResult<CompanyProfileResponseDto> response = new ApiResult<>(
             true, "Perfil de empresa creado correctamente", createdProfile);
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   /**

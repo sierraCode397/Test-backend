@@ -44,13 +44,13 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
     System.out.println("existingUser presente? " + existingUser.isPresent());
 
     if (existingUser.isEmpty()) {
-      System.out.println("Por acaaaaaaa estoy bien");
       existingUser = this.userService.crearUsuarioGoogle(fullname, email);
     }
 
     existingUser.ifPresent(user -> {
       customAttributes.put("userId", user.getId());
       customAttributes.put("role", user.getRole().name());
+      customAttributes.put("twoFactorEnabled", user.isTwoFactorEnabled());
     });
 
     return new DefaultOAuth2User(oauth2User.getAuthorities(), customAttributes, "email");
