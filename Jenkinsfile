@@ -229,7 +229,7 @@ pipeline {
                                     -e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
                                     -e SERVER_PORT=$PORT \
                                     --restart unless-stopped \
-                                    $BACKEND_IMAGE_NAME:latest"
+                                    isaacluisjuan107/primarket-backend-dev:latest"
 
                             echo "Backend deployment commands sent to $SSH_TARGET."
                         '''
