@@ -211,7 +211,7 @@ pipeline {
                             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$SSH_TARGET" \
                                 "docker run -d --name $BACKEND_CONTAINER_NAME \
                                     --network primarket \
-                                    -p $BACKEND_HOST_PORT:$PORT \
+                                    -p 8890:8080 \
                                     -e DB_HOST=$DB_HOST \
                                     -e DB_PORT=$DB_PORT \
                                     -e DB_NAME=$DB_NAME \
@@ -229,7 +229,7 @@ pipeline {
                                     -e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
                                     -e SERVER_PORT=$PORT \
                                     --restart unless-stopped \
-                                    isaacluisjuan107/primarket-backend-dev:latest"
+                                    $BACKEND_IMAGE_NAME:latest"
 
                             echo "Backend deployment commands sent to $SSH_TARGET."
                         '''
