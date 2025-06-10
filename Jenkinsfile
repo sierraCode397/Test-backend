@@ -140,25 +140,31 @@ pipeline {
                 ]) {
 
                     script {
-                        env.DB_URL = "jdbc:postgresql://${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}"
+                        env.DB_HOST     = DB_HOST
+                        env.DB_PORT     = DB_PORT
+                        env.DB_NAME     = DB_NAME
+                        env.DB_USERNAME = DB_USERNAME
+                        env.DB_PASSWORD = DB_PASSWORD
+
+                        env.DB_URL = "jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
                     }
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh """
+                        sh '''
                             set -e
 
-                            SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
+                            SSH_TARGET="$SSH_USER_ON_TARGET@$TARGET_HOST_IP"
 
-                            echo "\$SSH_TARGET Isaaac look at this"
+                            echo "$SSH_TARGET Isaaac look at this"
 
-                            ssh -o StrictHostKeyChecking=no \$SSH_TARGET \
+                            ssh -o StrictHostKeyChecking=no $SSH_TARGET \
                             'docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
                                 -p 5432:5432 \
-                                -e POSTGRES_DB=${DB_NAME} \
-                                -e POSTGRES_USER=${DB_USERNAME} \
-                                -e POSTGRES_PASSWORD='${DB_PASSWORD}' \
+                                -e POSTGRES_DB=$DB_NAME \
+                                -e POSTGRES_USER=$DB_USERNAME \
+                                -e POSTGRES_PASSWORD='$DB_PASSWORD' \
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
                                 postgres:latest
@@ -168,7 +174,7 @@ pipeline {
                                 sleep 15
                             echo "✅ Postgres is up (took \$((retries*2))s)."
                             
-                        """
+                        '''
                     }
                 }
             }
