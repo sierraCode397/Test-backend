@@ -140,31 +140,25 @@ pipeline {
                 ]) {
 
                     script {
-                        env.DB_HOST     = DB_HOST
-                        env.DB_PORT     = DB_PORT
-                        env.DB_NAME     = DB_NAME
-                        env.DB_USERNAME = DB_USERNAME
-                        env.DB_PASSWORD = DB_PASSWORD
-
-                        env.DB_URL = "jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
+                        env.DB_URL = "jdbc:postgresql://${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}"
                     }
 
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
-                        sh '''
+                        sh '''#!/usr/bin/env bash
                             set -e
 
-                            SSH_TARGET="$SSH_USER_ON_TARGET@$TARGET_HOST_IP"
+                            SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
 
                             echo "$SSH_TARGET Isaaac look at this"
 
-                            ssh -o StrictHostKeyChecking=no $SSH_TARGET \
-                            'docker inspect my-postgres >/dev/null 2>&1 || \
+                            ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc '
+                            docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
                                 -p 5432:5432 \
                                 -e POSTGRES_DB=$DB_NAME \
                                 -e POSTGRES_USER=$DB_USERNAME \
-                                -e POSTGRES_PASSWORD='$DB_PASSWORD' \
+                                -e POSTGRES_PASSWORD=$DB_PASSWORD \
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
                                 postgres:latest
@@ -184,9 +178,12 @@ pipeline {
             agent { label 'worker-agents-02' }
             steps {
                 withCredentials([
-                    string(credentialsId: 'jwt-secret',         variable: 'JWT_SECRET'),
-                    string(credentialsId: 'jwt-expiration',     variable: 'JWT_EXPIRATION'),
-                    string(credentialsId: 'app-port',           variable: 'PORT'),
+                    string(credentialsId: 'db-host',             variable: 'DB_HOST'),
+                    string(credentialsId: 'db-port',             variable: 'DB_PORT'),
+                    string(credentialsId: 'db-name',             variable: 'DB_NAME'),
+                    string(credentialsId: 'jwt-secret',          variable: 'JWT_SECRET'),
+                    string(credentialsId: 'jwt-expiration',      variable: 'JWT_EXPIRATION'),
+                    string(credentialsId: 'app-port',            variable: 'PORT'),
                     string(credentialsId: 'recaptcha-secret-key',variable: 'RECAPTCHA_SECRET_KEY'),
                     string(credentialsId: 'recaptcha-site-key',  variable: 'RECAPTCHA_SITE_KEY'),
                     string(credentialsId: 'cloud-name',          variable: 'CLOUD_NAME'),
