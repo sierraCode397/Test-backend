@@ -190,10 +190,15 @@ pipeline {
                     string(credentialsId: 'api-key',             variable: 'API_KEY'),
                     string(credentialsId: 'api-secret',          variable: 'API_SECRET'),
                     string(credentialsId: 'google-client-id',    variable: 'GOOGLE_CLIENT_ID'),
-                    string(credentialsId: 'google-client-secret',variable: 'GOOGLE_CLIENT_SECRET')
+                    string(credentialsId: 'google-client-secret',variable: 'GOOGLE_CLIENT_SECRET'),
+                    usernamePassword(credentialsId: 'db-postgres', usernameVariable: 'DB_USERNAME', passwordVariable: 'DB_PASSWORD')
                 ]) {
                     echo "Deploying backend container (${env.BACKEND_CONTAINER_NAME}) to ${env.TARGET_HOST_IP} on port ${env.BACKEND_HOST_PORT}"
 
+                    script {
+                        env.DB_URL = "jdbc:postgresql://${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}"
+                    }
+                    
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
                         sh '''
                         set -e
