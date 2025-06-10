@@ -151,18 +151,18 @@ pipeline {
 
                             echo "$SSH_TARGET Isaaac look at this"
 
-                            ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc '
+                            ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc "
                             docker inspect my-postgres >/dev/null 2>&1 || \
                             docker run -d --name my-postgres \
                                 --network primarket \
                                 -p 5432:5432 \
-                                -e POSTGRES_DB=$DB_NAME \
-                                -e POSTGRES_USER=$DB_USERNAME \
-                                -e POSTGRES_PASSWORD=$DB_PASSWORD \
+                                -e POSTGRES_DB='${DB_NAME}' \
+                                -e POSTGRES_USER='${DB_USERNAME}' \
+                                -e POSTGRES_PASSWORD='${DB_PASSWORD}' \
                                 -v pgdata:/var/lib/postgresql/data \
                                 --restart unless-stopped \
                                 postgres:latest
-                            '
+                            "
 
                             echo "Waiting for Postgres to become available..."
                                 sleep 15
