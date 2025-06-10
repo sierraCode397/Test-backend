@@ -198,44 +198,44 @@ pipeline {
                     script {
                         env.DB_URL = "jdbc:postgresql://${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}"
                     }
-                    
+
                     sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
                         sh '''
                         set -e
                         echo "Waiting a few seconds for the DB to fully start…"
                         sleep 15
 
-                        SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
+                        SSH_TARGET="$SSH_USER_ON_TARGET@$TARGET_HOST_IP"
 
                         ssh -o StrictHostKeyChecking=no $SSH_TARGET \
-                            "docker pull ${BACKEND_IMAGE_NAME}:latest"
+                            "docker pull $BACKEND_IMAGE_NAME:latest"
 
                         ssh -o StrictHostKeyChecking=no $SSH_TARGET \
-                            "docker stop ${BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true; \
-                            docker rm  ${BACKEND_CONTAINER_NAME} >/dev/null 2>&1 || true"
+                            "docker stop $BACKEND_CONTAINER_NAME >/dev/null 2>&1 || true; \
+                            docker rm  $BACKEND_CONTAINER_NAME >/dev/null 2>&1 || true"
 
                         ssh -o StrictHostKeyChecking=no $SSH_TARGET \
-                            "docker run -d --name ${BACKEND_CONTAINER_NAME} \
+                            "docker run -d --name $BACKEND_CONTAINER_NAME \
                             --network primarket \
-                            -p ${BACKEND_HOST_PORT}:${PORT} \
-                            -e DB_HOST='${DB_HOST}' \
-                            -e DB_PORT='${DB_PORT}' \
-                            -e DB_NAME='${DB_NAME}' \
-                            -e DB_USERNAME='${DB_USERNAME}' \
-                            -e DB_PASSWORD='${DB_PASSWORD}' \
-                            -e DB_URL='${DB_URL}' \
-                            -e JWT_SECRET='${JWT_SECRET}' \
-                            -e JWT_EXPIRATION='${JWT_EXPIRATION}' \
-                            -e RECAPTCHA_SECRET_KEY='${RECAPTCHA_SECRET_KEY}' \
-                            -e RECAPTCHA_SITE_KEY='${RECAPTCHA_SITE_KEY}' \
-                            -e CLOUD_NAME='${CLOUD_NAME}' \
-                            -e API_KEY='${API_KEY}' \
-                            -e API_SECRET='${API_SECRET}' \
-                            -e GOOGLE_CLIENT_ID='${GOOGLE_CLIENT_ID}' \
-                            -e GOOGLE_CLIENT_SECRET='${GOOGLE_CLIENT_SECRET}' \
-                            -e SERVER_PORT=${PORT} \
+                            -p $BACKEND_HOST_PORT:$PORT \
+                            -e DB_HOST=$DB_HOST \
+                            -e DB_PORT=$DB_PORT \
+                            -e DB_NAME=$DB_NAME \
+                            -e DB_USERNAME=$DB_USERNAME \
+                            -e DB_PASSWORD=$DB_PASSWORD \
+                            -e DB_URL=$DB_URL \
+                            -e JWT_SECRET=$JWT_SECRET \
+                            -e JWT_EXPIRATION=$JWT_EXPIRATION \
+                            -e RECAPTCHA_SECRET_KEY=$RECAPTCHA_SECRET_KEY \
+                            -e RECAPTCHA_SITE_KEY=$RECAPTCHA_SITE_KEY \
+                            -e CLOUD_NAME=$CLOUD_NAME \
+                            -e API_KEY=$API_KEY \
+                            -e API_SECRET=$API_SECRET \
+                            -e GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
+                            -e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
+                            -e SERVER_PORT=$PORT \
                             --restart unless-stopped \
-                            ${BACKEND_IMAGE_NAME}:latest"
+                            $BACKEND_IMAGE_NAME:latest"
 
                         echo "✅ Backend is starting on port ${BACKEND_HOST_PORT}"
                     '''
