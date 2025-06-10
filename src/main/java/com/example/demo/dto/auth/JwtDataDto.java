@@ -1,14 +1,13 @@
-package com.example.demo.dto;
+package com.example.demo.dto.auth;
 
 import java.util.UUID;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+
 
 /**
  * DTO that represents the data of the JWT token.
  */
-@Getter
-@Setter
+@Data
 public class JwtDataDto {
 
   private UUID uuid;

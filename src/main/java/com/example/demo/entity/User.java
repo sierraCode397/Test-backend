@@ -1,15 +1,8 @@
 package com.example.demo.entity;
 
 import com.example.demo.constant.Role;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -33,6 +26,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Entity
 @Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = "email")
 })
+@Access(AccessType.FIELD)
 public class User implements UserDetails {
 
 
@@ -40,7 +34,7 @@ public class User implements UserDetails {
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @Column(nullable = false, length = 255)
+  @Column(nullable = false)
   private String password;
 
   @Column(nullable = false, length = 100)
@@ -48,8 +42,7 @@ public class User implements UserDetails {
 
   @Enumerated(EnumType.STRING)
   @Column()
-  @Builder.Default
-  private Role role = Role.USER;
+  private Role role;
 
   @Builder.Default
   @Column(name = "created_at")
@@ -68,7 +61,10 @@ public class User implements UserDetails {
     return password;
   }
 
+
+
   @Override
+  @Transient
   public String getUsername() {
     return email;
   }

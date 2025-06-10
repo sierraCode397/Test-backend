@@ -1,16 +1,16 @@
 package com.example.demo.service;
 
 import com.example.demo.constant.Role;
-import com.example.demo.dto.JwtDataDto;
-import com.example.demo.dto.LoginRequestDto;
-import com.example.demo.dto.RegisterRequestDto;
+import com.example.demo.dto.auth.JwtDataDto;
+import com.example.demo.dto.auth.LoginRequestDto;
+import com.example.demo.dto.auth.RegisterRequestDto;
 import com.example.demo.entity.User;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.ConflictException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.ServiceUnavailableException;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.utils.JwtUtil;
+import com.example.demo.utils.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,7 +29,7 @@ public class AuthService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
-  private final JwtUtil jwtUtil;
+  private final JwtService jwtService;
   private final AuthenticationManager authenticationManager;
 
   /**
@@ -54,10 +54,11 @@ public class AuthService {
                     new ResourceNotFoundException("No se encontró el usuario con email: "
                             + loginRequestDto.getEmail()));
     JwtDataDto jwtDataDto = new JwtDataDto();
+    jwtDataDto.setUuid(user.getId());
     jwtDataDto.setFullname(user.getFullname());
     jwtDataDto.setEmail(user.getEmail());
     jwtDataDto.setRole(user.getRole().name());
-    return jwtUtil.generateToken(jwtDataDto);
+    return jwtService.generateToken(jwtDataDto);
   }
 
   /**
@@ -82,11 +83,12 @@ public class AuthService {
       userRepository.save(u);
 
       JwtDataDto jwtDataDto = new JwtDataDto();
+      jwtDataDto.setUuid(u.getId());
       jwtDataDto.setFullname(u.getFullname());
       jwtDataDto.setEmail(u.getEmail());
       jwtDataDto.setRole(u.getRole().name());
 
-      return jwtUtil.generateToken(jwtDataDto);
+      return jwtService.generateToken(jwtDataDto);
     } catch (DataIntegrityViolationException e) {
       throw new ConflictException("El email ya está en uso");
     } catch (Exception e) {
@@ -94,5 +96,27 @@ public class AuthService {
     }
   }
 
+
+  /**
+   * Extracts user information from the given JWT token.
+   *
+   * @param token the JWT token from which to extract the user's email
+   * @return a JwtDataDto containing the user's UUID, full name, email, and role
+   * @throws ResourceNotFoundException if no user is found with the extracted email
+   */
+  public JwtDataDto infoUser(String token) {
+    String email = jwtService.extractUsername(token);
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("No se encontró el usuario con email: "
+                            + email));
+
+    JwtDataDto dto = new JwtDataDto();
+    dto.setUuid(user.getId());
+    dto.setFullname(user.getFullname());
+    dto.setEmail(user.getEmail());
+    dto.setRole(user.getRole().name());
+    return dto;
+  }
 
 }

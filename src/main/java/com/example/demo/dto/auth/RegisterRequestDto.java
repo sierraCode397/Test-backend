@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.dto.auth;
 
 import com.example.demo.constant.Role;
 import jakarta.validation.constraints.Email;

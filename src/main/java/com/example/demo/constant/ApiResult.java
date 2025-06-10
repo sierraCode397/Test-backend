@@ -13,9 +13,12 @@ import lombok.Setter;
 @AllArgsConstructor
 @Setter
 @Getter
-public class ApiResponse<T> {
+public class ApiResult<T> {
 
   private boolean success;
   private String message;
   private T data;
+
+  public ApiResult(boolean b, String captchaInválido) {
+  }
 }

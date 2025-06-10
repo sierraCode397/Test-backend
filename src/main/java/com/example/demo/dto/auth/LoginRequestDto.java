@@ -1,16 +1,12 @@
-package com.example.demo.dto;
+package com.example.demo.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * DTO that represents the data required for a login request.
  */
-@Getter
-@Setter
 @Data
 public class LoginRequestDto {
 
@@ -20,5 +16,8 @@ public class LoginRequestDto {
 
   @NotBlank(message = "La contraseña no puede estar vacía")
   private String password;
+
+  @NotBlank(message = "No puede estar sin el token del recaptcha")
+  private String recaptchaToken;
 
 }

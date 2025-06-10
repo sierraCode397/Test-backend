@@ -1,6 +1,5 @@
 package com.example.demo.exception;
 
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 
