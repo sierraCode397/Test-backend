@@ -1,55 +1,44 @@
 package com.example.demo.config;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * Redis configuration for the application.
- * This class defines the necessary beans for connecting to a Redis server,
- * using Lettuce as the client and Dotenv for host and port configuration.
+ * Reads Redis connection settings from environment variables via Spring @Value.
  */
 @Configuration
-@RequiredArgsConstructor
 public class RedisConfig {
 
-  private final Dotenv dotenv;
+    @Value("${REDIS_HOST:localhost}")
+    private String redisHost;
 
-  /**
-   * Creates and configures the Redis connection using Lettuce.
-   * Reads the REDIS_HOST and REDIS_PORT environment variables from the .env file or environment.
-   *
-   * @return an instance of {@link LettuceConnectionFactory}
-   *       connected to the specified Redis server.
-   */
-  @Bean
-  public LettuceConnectionFactory redisConnectionFactory() {
-    String host = dotenv.get("REDIS_HOST", "localhost");
-    int port = Integer.parseInt(dotenv.get("REDIS_PORT", "6379"));
+    @Value("${REDIS_PORT:6379}")
+    private int redisPort;
 
-    RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-    config.setHostName(host);
-    config.setPort(port);
-    return new LettuceConnectionFactory(config);
-  }
+    /**
+     * Creates and configures the Redis connection using Lettuce.
+     * @return a LettuceConnectionFactory connected to the specified Redis server.
+     */
+    @Bean
+    public LettuceConnectionFactory redisConnectionFactory() {
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
+        return new LettuceConnectionFactory(config);
+    }
 
-
-  /**
-   * Configures a {@link RedisTemplate} to work with String keys and values.
-   * This template simplifies access to Redis using String as both key and value types.
-   *
-   * @param factory the Redis connection factory automatically injected by Spring.
-   * @return a {@link RedisTemplate} configured with the Redis connection.
-   */
-  @Bean
-  public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory factory) {
-    RedisTemplate<String, String> template = new RedisTemplate<>();
-    template.setConnectionFactory(factory);
-    return template;
-  }
+    /**
+     * Configures a RedisTemplate to work with String keys and values.
+     * @param factory the Redis connection factory injected by Spring.
+     * @return a RedisTemplate configured with the Redis connection.
+     */
+    @Bean
+    public RedisTemplate<String, String> redisTemplate(LettuceConnectionFactory factory) {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+        return template;
+    }
 }

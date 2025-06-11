@@ -2,14 +2,13 @@ package com.example.demo.config;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuration class for integrating with the Cloudinary service.
- * Reads required environment variables and exposes a Cloudinary bean.
+ * Reads credentials from environment variables via Spring @Value.
  */
 @Configuration
 public class CloudinaryConfig {
@@ -24,27 +23,20 @@ public class CloudinaryConfig {
   private String apiSecret;
 
   /**
-   * Logs the loaded Cloudinary environment variables (for debugging purposes).
-   */
-  @PostConstruct
-  public void init() {
-    System.out.println("Cloudinary config loaded:");
-    System.out.println("cloudName = " + cloudName);
-    System.out.println("apiKey = " + apiKey);
-    System.out.println("apiSecret = " + apiSecret);
-  }
-
-  /**
    * Creates and configures a Cloudinary instance using environment variables.
    *
    * @return a configured Cloudinary instance
    */
   @Bean
   public Cloudinary cloudinary() {
+    // Optional: log to verify
+    System.out.printf("cloudName=%s, apiKey=%s, apiSecret=%s%n",
+                      cloudName, apiKey, apiSecret);
+
     return new Cloudinary(ObjectUtils.asMap(
-        "cloud_name", cloudName,
-        "api_key", apiKey,
-        "api_secret", apiSecret
+      "cloud_name", cloudName,
+      "api_key",    apiKey,
+      "api_secret", apiSecret
     ));
   }
 }
