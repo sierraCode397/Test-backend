@@ -33,6 +33,7 @@ pipeline {
         string(name: 'GIT_BRANCH_BACKEND', defaultValue: 'develop', description: 'Git branch for Primarket Backend App code')
     }
 
+    stages {
 
         stage('Checkout Backend Code') {
             agent { label 'worker-agents-02' }
