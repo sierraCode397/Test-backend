@@ -174,6 +174,43 @@ pipeline {
             }
         }
 
+        stage('Ensure Redis on VM') {
+            agent { label 'worker-agents-02' }
+            steps {
+                withCredentials([
+                    string(credentialsId: 'redis-host', variable: 'REDIS_HOST'),
+                    string(credentialsId: 'redis-port', variable: 'REDIS_PORT')
+                ]) {
+                    sshagent (credentials: [env.SSH_CREDENTIAL_ID]) {
+                        sh '''#!/usr/bin/env bash
+                        set -e
+
+                        SSH_TARGET="${SSH_USER_ON_TARGET}@${TARGET_HOST_IP}"
+
+                        echo "🔍 Checking for Redis container 'my-redis' on '${TARGET_HOST_IP}'..."
+
+                        ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc '
+                        if ! docker inspect '${REDIS_HOST}' >/dev/null 2>&1; then
+                            echo "📦 Redis not found. Creating '${REDIS_HOST}' on network primarket..."
+                            docker run -d --name '${REDIS_HOST}' \
+                            --network primarket \
+                            -p ${REDIS_PORT}:6379 \
+                            redis
+                        else
+                            echo "✅ Redis container already exists."
+                        fi
+                        '
+
+                        echo "⏳ Waiting a few seconds for Redis to start..."
+                        sleep 5
+                        echo "✅ Redis should be up at '${REDIS_HOST}':'${REDIS_PORT}'"
+                        '''
+                    }
+                }
+            }
+        }
+
+
         stage('Deploy Backend to VM') {
             agent { label 'worker-agents-02' }
             steps {
@@ -191,6 +228,11 @@ pipeline {
                     string(credentialsId: 'api-secret',          variable: 'API_SECRET'),
                     string(credentialsId: 'google-client-id',    variable: 'GOOGLE_CLIENT_ID'),
                     string(credentialsId: 'google-client-secret',variable: 'GOOGLE_CLIENT_SECRET'),
+                    string(credentialsId: 'mail-host',           variable: 'MAIL_HOST'),
+                    string(credentialsId: 'mail-port',           variable: 'MAIL_PORT'),
+                    string(credentialsId: 'redis-host',          variable: 'REDIS_HOST'),
+                    string(credentialsId: 'redis-port',          variable: 'REDIS_PORT'),
+                    usernamePassword(credentialsId: 'mail-credentials', usernameVariable: 'MAIL_USERNAME', passwordVariable: 'MAIL_PASSWORD'),
                     usernamePassword(credentialsId: 'db-postgres', usernameVariable: 'DB_USERNAME', passwordVariable: 'DB_PASSWORD')
                 ]) {
                     echo "Deploying backend container (${env.BACKEND_CONTAINER_NAME}) to ${env.TARGET_HOST_IP} on port ${env.BACKEND_HOST_PORT}"
@@ -233,7 +275,13 @@ pipeline {
                             -e API_SECRET='${API_SECRET}' \
                             -e GOOGLE_CLIENT_ID='${GOOGLE_CLIENT_ID}' \
                             -e GOOGLE_CLIENT_SECRET='${GOOGLE_CLIENT_SECRET}' \
-                            -e SERVER_PORT=${PORT} \
+                            -e SERVER_PORT='${PORT}' \
+                            -e MAIL_HOST='${MAIL_HOST}' \
+                            -e MAIL_PORT='${MAIL_PORT}' \
+                            -e REDIS_HOST='${REDIS_HOST}' \
+                            -e REDIS_PORT='${REDIS_PORT}' \
+                            -e MAIL_USERNAME='${MAIL_USERNAME}' \
+                            -e MAIL_PASSWORD='${MAIL_PASSWORD}' \
                             --restart unless-stopped \
                             ${BACKEND_IMAGE_NAME}:latest"
 
