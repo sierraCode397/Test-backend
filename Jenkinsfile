@@ -194,7 +194,7 @@ pipeline {
                             echo "📦 Redis not found. Creating '${REDIS_HOST}' on network primarket..."
                             docker run -d --name '${REDIS_HOST}' \
                             --network primarket \
-                            -p ${REDIS_PORT}:6379 \
+                            -p '${REDIS_PORT}':6379 \
                             redis
                         else
                             echo "✅ Redis container already exists."
