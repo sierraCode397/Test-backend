@@ -1,0 +1,23 @@
+# Exclude Git metadata and IDE/editor files
+.git
+.gitignore
+.idea/
+.vscode/
+
+# CI/CD and documentation
+Jenkinsfile
+docs/
+mkdocs.yml
+README.md
+*.md
+
+# Local environment files
+*.env
+
+# Maven wrapper (we run Maven in the builder stage, not via wrapper)
+mvnw
+mvnw.cmd
+
+# Don’t send test code into the image
+src/test/
+src/test/**

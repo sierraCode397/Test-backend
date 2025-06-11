@@ -69,30 +69,36 @@ pipeline {
 
         stage('Build Backend Docker Image') {
             agent { label 'worker-agents-02' }
+
+            // Fail the stage if it goes past 15 minutes
+            options {
+                timeout(time: 15, unit: 'MINUTES')
+            }
+
+            // Enable BuildKit caching
+            environment {
+                DOCKER_BUILDKIT = '1'
+            }
+
             steps {
-                echo "Building Backend Docker image: ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}"
-                echo "Using SPRINT_BOOT_PUBLIC_API_BASE_URL=${env.SPRINT_BOOT_PUBLIC_API_BASE_URL_FOR_BUILD} for the build."
+                echo "Building Docker image ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}"
+                echo "Using SPRINT_BOOT_PUBLIC_API_BASE_URL=${env.SPRINT_BOOT_PUBLIC_API_BASE_URL_FOR_BUILD}"
+
+                script {
+                // Let Jenkins re-try the entire build up to 3 times
+                    retry(3) {
+                        // BuildKit will cache ~/.m2 between builds if your Dockerfile uses --mount=type=cache
+                        def img = docker.build(
+                        "${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}",
+                        "--build-arg SPRINT_BOOT_PUBLIC_API_BASE_URL=${env.SPRINT_BOOT_PUBLIC_API_BASE_URL_FOR_BUILD} -f Dockerfile ."
+                        )
+                    }
+                }
+
+                // Tag “latest” only once the build has succeeded
                 sh """
-                    set -e
-                    BUILD_SUCCESSFUL=false
-                    for i in \$(seq 1 3); do
-                        if docker build \
-                                --build-arg SPRINT_BOOT_PUBLIC_API_BASE_URL="${env.SPRINT_BOOT_PUBLIC_API_BASE_URL_FOR_BUILD}" \
-                                -t "${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}" \
-                                -f Dockerfile \
-                                .; then
-                            BUILD_SUCCESSFUL=true
-                            break
-                        fi
-                        echo "Backend build failed, attempt \$i of 3. Retrying in 30 seconds..."
-                        sleep 30
-                    done
-                    if [ "\$BUILD_SUCCESSFUL" = "false" ]; then
-                        echo "ERROR: Backend build failed after 3 attempts."
-                        exit 1
-                    fi
-                    docker tag "${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}" "${env.BACKEND_IMAGE_NAME}:latest"
-                    echo "Backend image built: ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} and tagged as :latest"
+                docker tag ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} ${env.BACKEND_IMAGE_NAME}:latest
+                echo "Tagged image as :latest"
                 """
             }
         }
