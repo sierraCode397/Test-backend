@@ -189,7 +189,11 @@ pipeline {
 
                         echo "🔍 Checking for Redis container 'my-redis' on '${TARGET_HOST_IP}'..."
 
-                        ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc '
+                        ssh -o StrictHostKeyChecking=no $SSH_TARGET \
+                            "docker stop ${REDIS_HOST} >/dev/null 2>&1 || true; \
+                            docker rm  ${REDIS_HOST} >/dev/null 2>&1 || true"
+
+                        ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc "
                         if ! docker inspect '${REDIS_HOST}' >/dev/null 2>&1; then
                             echo "📦 Redis not found. Creating '${REDIS_HOST}' on network primarket..."
                             docker run -d --name '${REDIS_HOST}' \
@@ -199,7 +203,7 @@ pipeline {
                         else
                             echo "✅ Redis container already exists."
                         fi
-                        '
+                        "
 
                         echo "⏳ Waiting a few seconds for Redis to start..."
                         sleep 5
