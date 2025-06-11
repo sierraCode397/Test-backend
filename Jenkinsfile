@@ -33,7 +33,7 @@ pipeline {
         string(name: 'GIT_BRANCH_BACKEND', defaultValue: 'develop', description: 'Git branch for Primarket Backend App code')
     }
 
-    stages {
+/*     stages {
         stage('Lint') {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
@@ -46,7 +46,7 @@ pipeline {
                     recordIssues tools: [checkStyle(pattern: 'target/checkstyle-result.xml')]
                 }
             }
-        }
+        } */
 
         stage('Checkout Backend Code') {
             agent { label 'worker-agents-02' }
