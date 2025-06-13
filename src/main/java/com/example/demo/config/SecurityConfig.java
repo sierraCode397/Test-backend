@@ -97,22 +97,21 @@ public class SecurityConfig {
    * @return the configured SecurityFilterChain
    * @throws Exception in case of configuration errors
    */
-  @Bean
   @Order(2)
+  @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-            .csrf(AbstractHttpConfigurer::disable)
+    http.csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults())
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
             .authenticationProvider(authProvider)
-            .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .exceptionHandling(ex -> ex
-                    .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-            )
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/auth/login",
+                    .requestMatchers(
+                            "/auth/login",
+                            "/auth/forgot-password",
+                            "/auth/reset-password",
                             "/auth/register",
                             "/swagger-ui/**",
                             "/v3/api-docs/**",
@@ -120,9 +119,12 @@ public class SecurityConfig {
                             "/swagger-resources/**",
                             "/swagger-ui.html",
                             "/api/auth/2fa/validate",
-                            "/webjars/**").permitAll()
-                    .anyRequest().authenticated())
+                            "/webjars/**"
+                    ).permitAll()
+                    .anyRequest().authenticated()
+            )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
     return http.build();
   }
 

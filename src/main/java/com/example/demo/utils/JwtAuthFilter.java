@@ -10,6 +10,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,12 +34,33 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
   private final UserService userDetailsService;
+  private static final List<String> PUBLIC_URLS = List.of(
+          "/auth/login",
+          "/auth/register",
+          "/auth/forgot-password",
+          "/auth/reset-password",
+          "/api/auth/2fa/validate",
+          "/swagger-ui",
+          "/swagger-ui/",
+          "/swagger-ui.html",
+          "/swagger-ui/**",
+          "/v3/api-docs",
+          "/v3/api-docs/**"
+  );
+
 
   @Override
   protected void doFilterInternal(
           @NonNull HttpServletRequest request,
           @NonNull HttpServletResponse response,
           @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+     String path = request.getRequestURI();
+
+     if( PUBLIC_URLS.stream().anyMatch(path::startsWith)) {
+       filterChain.doFilter(request, response);
+       return;
+     }
 
     final String authHeader = request.getHeader("Authorization");
 
@@ -59,7 +82,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
           throw new InvalidTokenException("Token inválido");
         }
         Boolean twoFaPending = jwtService.extractTwoFaPending(token);
-        String path = request.getRequestURI();
+
         boolean is2FaVerificationEndpoint = path.equals("/api/auth/2fa/validate");
         if (Boolean.TRUE.equals(twoFaPending) && !is2FaVerificationEndpoint) {
           throw new UnauthorizedException("2FA verification required");

@@ -40,11 +40,11 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
     String email = (String) oauth2User.getAttributes().get("email");
     String fullname = (String) oauth2User.getAttributes().get("name");
 
-    Optional<User> existingUser = userService.usuarioPorCorreoGoogle(email);
+    Optional<User> existingUser = userService.userByEmailGoogle(email);
     System.out.println("existingUser presente? " + existingUser.isPresent());
 
     if (existingUser.isEmpty()) {
-      existingUser = this.userService.crearUsuarioGoogle(fullname, email);
+      existingUser = this.userService.createUserGoogle(fullname, email);
     }
 
     existingUser.ifPresent(user -> {

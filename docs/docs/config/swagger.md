@@ -1,0 +1,1 @@
+[//]: # (Automatically documented by `Swagger/OpenAPI`)

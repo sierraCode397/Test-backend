@@ -11,6 +11,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,6 +38,7 @@ public class CompanyProfile {
   @JdbcTypeCode(SqlTypes.UUID)
   @Column(updatable = false, nullable = false)
   private UUID id;
+
   @Column(nullable = false, length = 300, name = "trade_name")
   private String tradeName;
   @Column(nullable = false, length = 300, name = "legal_name")
@@ -50,6 +53,9 @@ public class CompanyProfile {
   private String legalRepresentative;
   @Column(nullable = false, name = "file_url")
   private String fileUrl;
+  @Column(nullable = false, length = 15)
+  private String phone;
+
   @OneToOne
   @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true)
   private User user;

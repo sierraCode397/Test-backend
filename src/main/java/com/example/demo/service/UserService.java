@@ -29,7 +29,7 @@ public class UserService implements UserDetailsService {
                     new UsernameNotFoundException("Usuario no encontrado con email: " + username));
   }
 
-  public Optional<User> usuarioPorCorreoGoogle(String email) {
+  public Optional<User> userByEmailGoogle(String email) {
     return this.userRepository.findByEmail(email);
   }
 
@@ -41,7 +41,7 @@ public class UserService implements UserDetailsService {
    * @param email the email address of the new user
    * @return an {@link Optional} containing the saved {@link User} entity
    */
-  public Optional<User> crearUsuarioGoogle(String fullname, String email) {
+  public Optional<User> createUserGoogle(String fullname, String email) {
     User newUser = new User();
     newUser.setFullname(fullname);
     newUser.setEmail(email);

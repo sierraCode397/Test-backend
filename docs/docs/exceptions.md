@@ -1,0 +1,1 @@
+[//]: # (Global management of exceptions in the application)

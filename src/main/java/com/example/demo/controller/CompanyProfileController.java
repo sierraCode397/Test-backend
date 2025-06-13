@@ -98,9 +98,9 @@ public class CompanyProfileController {
 
     validateFile(file);
     CompanyProfileRequestDto companyProfileRequestDto = valid(companyProfileRequestDtoJson);
-    companyProfileService.updateRejectedProfile(file, companyProfileRequestDto);
-    ApiResult<Void> response = new ApiResult<>(
-            true, "Se actualizo exitosamente el perfil de empresa.", null);
+    CompanyProfileResponseDto updateProfile = companyProfileService.updateRejectedProfile(file, companyProfileRequestDto);
+    ApiResult<CompanyProfileResponseDto> response = new ApiResult<>(
+            true, "Se actualizo exitosamente el perfil de empresa.", updateProfile);
     return ResponseEntity.ok(response);
   }
 

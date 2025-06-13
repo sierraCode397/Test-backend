@@ -1,0 +1,1 @@
+[//]: # (General information about routes in the application)

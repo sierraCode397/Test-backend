@@ -47,4 +47,11 @@ public class CompanyProfileRequestDto {
 
   @NotNull(message = "El userId es obligatorio")
   private UUID userId;
+
+  @Pattern(
+          regexp = "^\\+?[0-9]*$",
+          message = "El teléfono solo puede contener números y un '+' opcional al inicio"
+  )
+  @Size(max = 15, message = "El teléfono no puede superar los 15 caracteres")
+  private String phone;
 }

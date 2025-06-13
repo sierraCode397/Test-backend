@@ -55,6 +55,7 @@ public class CompanyProfileService {
             profile.getId(),
             profile.getTradeName(),
             profile.getLegalName(),
+            profile.getPhone(),
             profile.getCuit(),
             profile.getCountry(),
             profile.getCompanyLocation(),
@@ -95,12 +96,12 @@ public class CompanyProfileService {
   /**
    * Updates a rejected company profile with new file and data.
    *
-   * @param file file to upload
+   * @param file                     file to upload
    * @param companyProfileRequestDto updated profile data
    * @throws ResourceNotFoundException if user or profile not found
-   * @throws FileUploadException if file upload fails
+   * @throws FileUploadException       if file upload fails
    */
-  public void updateRejectedProfile(
+  public CompanyProfileResponseDto updateRejectedProfile(
           MultipartFile file,
           CompanyProfileRequestDto companyProfileRequestDto) {
     User user = userRepository.findById(companyProfileRequestDto.getUserId())
@@ -109,7 +110,19 @@ public class CompanyProfileService {
     CompanyProfile profile = companyProfileRepository.findByUser(user)
             .orElseThrow(() -> new ResourceNotFoundException("Perfil de empresa no encontrado"));
 
-    saveProfile(profile, user, companyProfileRequestDto, file);
+     saveProfile(profile, user, companyProfileRequestDto, file);
+    return new CompanyProfileResponseDto (
+            profile.getId(),
+            profile.getTradeName(),
+            profile.getLegalName(),
+            profile.getPhone(),
+            profile.getCuit(),
+            profile.getCountry(),
+            profile.getCompanyLocation(),
+            profile.getLegalRepresentative(),
+            profile.getFileUrl(),
+            profile.getStatus().name()
+    );
   }
 
   /**
@@ -146,6 +159,7 @@ public class CompanyProfileService {
     profile.setCountry(companyProfileRequestDto.getCountry());
     profile.setCompanyLocation(companyProfileRequestDto.getCompanyLocation());
     profile.setLegalRepresentative(companyProfileRequestDto.getLegalRepresentative());
+    profile.setPhone(companyProfileRequestDto.getPhone());
     profile.setFileUrl(url);
     profile.setUser(user);
     profile.setStatus(CompanyProfileStatus.PENDING);

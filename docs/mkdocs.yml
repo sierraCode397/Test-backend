@@ -1,9 +1,16 @@
-site_name: Documentación Frontend
+site_name: Documentación Backend
+site_description: Documentación técnica del backend del proyecto.
 theme:
   name: material
+  language: es
 
 nav:
   - Inicio: index.md
+  - Arquitectura: architecture.md
+  - Controladores: controllers.md
+  - Servicios: services.md
+
+
 
 markdown_extensions:
   - admonition

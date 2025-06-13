@@ -23,4 +23,5 @@ public class CompanyProfileResponseDto {
   private String legalRepresentative;
   private String fileUrl;
   private String status;
+  private String phone;
 }

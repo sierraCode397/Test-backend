@@ -1,6 +1,7 @@
 package com.example.demo.utils;
 
 import com.example.demo.dto.auth.JwtDataDto;
+import com.example.demo.exception.ResourceNotFoundException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -12,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -154,6 +157,16 @@ public class JwtService {
   public Boolean extractTwoFaPending(String token) {
     Claims claims = extractAllClaims(token);
     return claims.get("twoFaPending", Boolean.class);
+  }
+
+  public String extractUsernameFromSecurityContext() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+      return ((UserDetails) authentication.getPrincipal()).getUsername(); // Extrae el email del usuario autenticado
+    }
+
+    throw new ResourceNotFoundException("No se pudo obtener el usuario autenticado");
   }
 }
 

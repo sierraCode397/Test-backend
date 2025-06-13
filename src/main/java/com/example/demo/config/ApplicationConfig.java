@@ -17,7 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 /**
  * Application configuration class that defines the necessary beans.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
 public class ApplicationConfig {
 

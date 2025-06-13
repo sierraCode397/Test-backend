@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.EmailRequestForgotPass;
+import com.example.demo.dto.KeysDTO;
 import com.example.demo.constant.ApiResult;
 import com.example.demo.dto.auth.JwtDataDto;
 import com.example.demo.dto.auth.LoginRequestDto;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 
 /**
@@ -64,7 +67,7 @@ public class AuthController {
     if (user.isTwoFactorEnabled()) {
       authService.sendTwoFactorCodeToEmail(user);
       return ResponseEntity.status(HttpStatus.ACCEPTED)
-              .body(new ApiResult<>(true, "Código de verificación enviado al email", null));
+              .body(new ApiResult<>(true, "Código de verificación enviado al email", "2FA_CODE_SENT"));
     }
     String token = authService.generateJwtToken(request.getEmail());
     HttpHeaders headers = new HttpHeaders();
@@ -89,6 +92,50 @@ public class AuthController {
     ApiResult<Map<String, String>> response = new ApiResult<>(true, "Registro exitoso", data);
     return ResponseEntity.ok().headers(headers).body(response);
   }
+
+  /**
+   * Endpoint para iniciar el proceso de recuperación de contraseña mediante correo electrónico.
+   * <p>
+   * Este metodo recibe un objeto {@link EmailRequestForgotPass} que contiene el correo electrónico del usuario.
+   * Verifica que el correo no esté vacío y luego delega al servicio de autenticación {@code authService}
+   * la generación de un código de recuperación, su almacenamiento, y el envío al correo proporcionado.
+   * </p>
+   *
+   * @param request Objeto que contiene el correo electrónico del usuario que solicita recuperar su contraseña.
+   * @return Una respuesta HTTP con mensaje de confirmación si el proceso se inicia correctamente.
+   * @throws IllegalArgumentException si el correo electrónico está vacío o es nulo.
+   */
+  @PostMapping("/forgot-password")
+  public ResponseEntity<String> forgotPassword(@RequestBody EmailRequestForgotPass request) {
+    if(request.getEmail() == null || request.getEmail().isEmpty()) {
+      throw new IllegalArgumentException("El email no puede estar vacío");
+    }
+    return ResponseEntity.ok(authService.forgotPassword(request.getEmail()));
+  }
+
+  /**   * Endpoint to reset the user's password using a verification code.
+   * * This method checks if the new password and repeated password match.
+   * * If they do not match, it throws a `ResponseStatusException` with a BAD_REQUEST status.
+   * * If they match, it calls the `resetPassword` method of the `authService`
+   * * to update the user's password using the provided code and new password.
+   * * @param contraDTO the DTO containing the new password, repeated password, and verification code
+   * @param contraDTO
+   * @return ResponseEntity with a success message if the password is updated successfully
+   * @throws ResponseStatusException if the new password and repeated password do not match
+   *
+   */
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody KeysDTO contraDTO) {
+      if (!contraDTO.getNewPassword().equals(contraDTO.getRepeatPassword())) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las contraseñas no coinciden");
+      }
+
+      authService.resetPassword(contraDTO.getCode(), contraDTO.getNewPassword());
+      return ResponseEntity.ok("Contraseña actualizada correctamente");
+    }
+
+
 
   /**
    * Endpoint to retrieve authenticated user info from JWT.

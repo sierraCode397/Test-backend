@@ -40,11 +40,11 @@ public class CustomOidcUserService extends OidcUserService {
     String email = oidcUser.getEmail();
     String fullname = (String) oidcUser.getAttributes().get("name");
 
-    Optional<User> existingUser = userService.usuarioPorCorreoGoogle(email);
+    Optional<User> existingUser = userService.userByEmailGoogle(email);
     System.out.println("existingUser presente? " + existingUser.isPresent());
 
     if (existingUser.isEmpty()) {
-      existingUser = this.userService.crearUsuarioGoogle(fullname, email);
+      existingUser = this.userService.createUserGoogle(fullname, email);
     }
 
     Map<String, Object> attributes = new HashMap<>(oidcUser.getAttributes());

@@ -3,7 +3,7 @@ name: Mkdocs and Github Actions
 on:
   push:
     branches:
-      - mkdocs
+      - develop
     paths:
       - 'docs/**'
       - 'docs/mkdocs.yml'
