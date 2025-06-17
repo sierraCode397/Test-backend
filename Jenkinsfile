@@ -88,6 +88,7 @@ pipeline {
                 script {
                 // Let Jenkins re-try the entire build up to 3 times
                     retry(3) {
+                        // BuildKit will cache ~/.m2 between builds if your Dockerfile uses --mount=type=cache
                         def img = docker.build(
                         "${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}",
                         "--build-arg SPRINT_BOOT_PUBLIC_API_BASE_URL=${env.SPRINT_BOOT_PUBLIC_API_BASE_URL_FOR_BUILD} -f Dockerfile ."
@@ -95,6 +96,7 @@ pipeline {
                     }
                 }
 
+                // Tag “latest” only once the build has succeeded
                 sh """
                 docker tag ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} ${env.BACKEND_IMAGE_NAME}:latest
                 echo "Tagged image as :latest"

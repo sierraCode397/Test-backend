@@ -28,14 +28,8 @@ WORKDIR /app
 # Copy only the packaged JAR
 COPY --from=builder /app/target/demo-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose port and add a healthcheck
+# Expose port 
 EXPOSE 8080
-
-HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
-  CMD curl -f \
-       -H "Authorization: Bearer $JWT_SECRET" \
-       http://localhost:8080/actuator/health \
-    || exit 1
 
 # Drop to non-root
 USER springuser
