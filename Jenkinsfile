@@ -196,23 +196,16 @@ pipeline {
 
                         echo "🔍 Checking for Redis container 'my-redis' on '${TARGET_HOST_IP}'..."
 
-                        ssh -o StrictHostKeyChecking=no $SSH_TARGET \
-                            "docker stop ${REDIS_HOST} >/dev/null 2>&1 || true; \
-                            docker rm  ${REDIS_HOST} >/dev/null 2>&1 || true"
-
                         ssh -o StrictHostKeyChecking=no $SSH_TARGET bash -lc "
-                        if ! docker inspect '${REDIS_HOST}' >/dev/null 2>&1; then
-                            echo "📦 Redis not found. Creating '${REDIS_HOST}' on network primarket..."
-                            docker run -d --name '${REDIS_HOST}' \
+                        docker inspect '${REDIS_HOST}' >/dev/null 2>&1 || \
+                        docker run -d --name '${REDIS_HOST}' \
                             --network primarket \
                             -p '${REDIS_PORT}':6379 \
+                            -v redisdata:/data \
+                            --restart unless-stopped \
                             redis
-                        else
-                            echo "✅ Redis container already exists."
-                        fi
                         "
-
-                        echo "⏳ Waiting a few seconds for Redis to start..."
+                        echo "⏳ Waiting a few seconds for Redis..."
                         sleep 5
                         echo "✅ Redis should be up at '${REDIS_HOST}':'${REDIS_PORT}'"
                         '''
