@@ -20,6 +20,8 @@ RUN --mount=type=cache,target=/root/.m2 \
 FROM eclipse-temurin:21-jdk-jammy
 LABEL authors="IsaacLuis"
 
+RUN apt-get update && apt-get install -y curl net-tools && rm -rf /var/lib/apt/lists/*
+
 # Create a non-root user
 RUN useradd -m springuser
 
@@ -31,7 +33,7 @@ COPY --from=builder /app/target/demo-0.0.1-SNAPSHOT.jar app.jar
 # Expose port 
 EXPOSE 8080
 
-HEALTHCHECK CMD ss -tln | grep ':8080' || exit 1
+HEALTHCHECK CMD netstat -tln | grep ':8080' || exit 1
 
 # Drop to non-root
 USER springuser

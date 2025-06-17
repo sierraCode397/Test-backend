@@ -55,7 +55,7 @@ pipeline {
                 echo "Preparing workspace and checking out Primarket Backend code from branch ${params.GIT_BRANCH_BACKEND}"
                 cleanWs()
 
-                git url: 'git@github.com:Primarke/Front-Primarket.git',
+                git url: 'git@github.com:Primarke/Back-Primarket.git',
                     credentialsId: 'jenkins-github-ssh',
                     branch: params.GIT_BRANCH_BACKEND
 
